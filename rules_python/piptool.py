@@ -192,6 +192,26 @@ def extract(args):
           contents.append(f.read() + '\n')
   contents = '\n'.join(contents)
 
+  parser = whl.entrypoints()
+  entrypoints_build = ''
+  if parser:
+      if parser.has_section('console_scripts'):
+          for name, location in parser.items('console_scripts'):
+              # Assumes it doesn't depend on extras. TODO(conrado): fix
+              entrypoint_file = 'entrypoint_%s.py' % name
+              with open(os.path.join(args.directory, entrypoint_file), 'w') as f:
+                  f.write("""from %s import %s as main; main()""" % tuple(location.split(":")))
+              entrypoints_build += """
+py_binary(
+    name = "{entrypoint_name}",
+    srcs = ["{entrypoint_file}"],
+    main = "{entrypoint_file}",
+    deps = [":pkg"],
+)""".format(
+        entrypoint_name='entrypoint_%s' % name,
+        entrypoint_file=entrypoint_file
+        )
+
   with open(os.path.join(args.directory, 'BUILD'), 'w') as f:
     f.write("""
 package(default_visibility = ["//visibility:public"])
@@ -214,6 +234,7 @@ py_library(
     ],
 )
 {extras}
+{entrypoints_build}
 {contents}""".format(
   wheel = whl.basename(),
   repository=args.repository,
@@ -235,6 +256,7 @@ py_library(
             ]))
     for extra in args.extras or []
   ]),
+  entrypoints_build=entrypoints_build,
   contents=contents))
 
 parser = subparsers.add_parser('extract', help='Extract one or more wheels as a py_library')
