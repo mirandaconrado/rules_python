@@ -27,6 +27,11 @@ try:
 except ImportError:
     from configparser import ConfigParser
 
+try:
+    from io import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 
 class Wheel(object):
 
@@ -100,8 +105,11 @@ class Wheel(object):
       with zipfile.ZipFile(self.path(), 'r') as whl:
           try:
               with whl.open(os.path.join(self._dist_info(), 'entry_points.txt')) as f:
+                  lines = map(lambda l: l.strip(), f.readlines())
+                  stream = StringIO('\n'.join(lines).decode('utf-8'))
                   parser = ConfigParser()
-                  parser.readfp(f)
+                  parser.readfp(stream)
+                  stream.close()
                   return parser
           except KeyError:
               return None
