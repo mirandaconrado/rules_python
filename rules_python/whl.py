@@ -20,6 +20,7 @@ import itertools
 import json
 import os
 import re
+import shutil
 import zipfile
 
 
@@ -138,7 +139,7 @@ class Wheel(object):
     if os.path.isdir(purelib_path):
         for _, subdirs, _ in os.walk(purelib_path):
             for s in subdirs:
-                os.symlink(os.path.join(purelib_path, s), os.path.join(directory, s))
+                shutil.move(os.path.join(purelib_path, s), os.path.join(directory, s))
             break
 
     # Add empty init files where needed
