@@ -40,6 +40,39 @@ def _extract_wheels(ctx, wheels):
     if result.return_code:
         fail("extract_wheels failed: %s (%s)" % (result.stdout, result.stderr))
 
+    patch_runtime = ctx.attr.patch_runtime
+    patch_runtime = [ctx.path(p) for p in patch_runtime]
+
+    for p in patch_runtime:
+        _apply_patch(p, ctx)
+
+def _apply_patch(patch, ctx):
+    patch_cmd = ctx.which("patch")
+    if patch_cmd == None:
+        fail("Command `patch` is required.")
+
+    sh = ctx.which("sh")
+    if sh == None:
+        fail("Command `sh` not found.")
+
+    inner_cmd = "%s -p0 <%s" % (patch_cmd, ctx.path(patch).realpath)
+    cmd = [sh,
+           "-c",
+           inner_cmd]
+
+    result = ctx.execute(cmd)
+    if not result.return_code == 0:
+        err_path = ctx.path('FAILURE_stderr.txt')
+        ctx.file(err_path, result.stderr)
+        out_path = ctx.path('FAILURE_stdout.txt')
+        ctx.file(out_path, result.stdout)
+
+        error_message = "Error applying patch %s. Full outputs in: \n%s\n%s\n"
+        error_message = error_message % (
+            str(patch), err_path.realpath, out_path.realpath)
+        error_message += '\n'.join(result.stderr.split('\n')[-20:])
+        fail(error_message)
+
 def _build_wheel(ctx):
     env = {}
     python = ctx.path(ctx.attr.python) if ctx.attr.python else "python"
@@ -161,6 +194,7 @@ extract_wheels = repository_rule(
         "additional_runtime_deps": attr.string_list(),
         "additional_build_content":  attr.label(allow_single_file=True),
         "remove_runtime_deps": attr.string_list(),
+        "patch_runtime": attr.label_list(allow_files=True),
         "repository":  attr.string(),
         "extras": attr.string_list(),
         "python": attr.label(
@@ -170,6 +204,11 @@ extract_wheels = repository_rule(
         "_piptool": attr.label(
             executable = True,
             default = Label("//tools:piptool.par"),
+            cfg = "host",
+        ),
+        "_patcher": attr.label(
+            executable = True,
+            default = Label("//tools:patcher.sh"),
             cfg = "host",
         ),
     },

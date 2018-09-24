@@ -10,6 +10,8 @@ _additional_build_content = {%{additional_build_content}
 }
 _remove_runtime_deps = {%{remove_runtime_deps}
 }
+_patch_runtime = {%{patch_runtime}
+}
 
 def get_transitive_deps(all_libs, key):
     res = depset(all_libs[key].get("transitive_runtime_deps", []))
@@ -38,6 +40,7 @@ def whl_library(key, all_libs, name, wheel_name, version=None, urls=None, whl=No
     additional_runtime_deps = _additional_runtime_deps.get(key, [])
     additional_build_content = _additional_build_content.get(key, None)
     remove_runtime_deps = _remove_runtime_deps.get(key, [])
+    patch_runtime = _patch_runtime.get(key, [])
 
     build_deps = depset()
     for d in buildtime_deps:
@@ -52,6 +55,7 @@ def whl_library(key, all_libs, name, wheel_name, version=None, urls=None, whl=No
                 additional_runtime_deps = additional_runtime_deps,
                 additional_build_content = additional_build_content,
                 remove_runtime_deps = remove_runtime_deps,
+                patch_runtime = patch_runtime,
                 repository = repository,
                 extras = extras,
                 python = python,
@@ -73,6 +77,7 @@ def whl_library(key, all_libs, name, wheel_name, version=None, urls=None, whl=No
                 additional_runtime_deps = additional_runtime_deps,
                 additional_build_content = additional_build_content,
                 remove_runtime_deps = remove_runtime_deps,
+                patch_runtime = patch_runtime,
                 repository = repository,
                 extras = extras,
                 python = python,
@@ -96,6 +101,7 @@ def whl_library(key, all_libs, name, wheel_name, version=None, urls=None, whl=No
             additional_runtime_deps = additional_runtime_deps,
             additional_build_content = additional_build_content,
             remove_runtime_deps = remove_runtime_deps,
+            patch_runtime = patch_runtime,
             repository = repository,
             extras = extras,
             python = python,

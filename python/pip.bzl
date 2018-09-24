@@ -53,6 +53,7 @@ sh_binary(
       "%{additional_runtime_deps}": _expand_deps_to_dict(repository_ctx.attr.additional_runtime_deps),
       "%{additional_build_content}": _expand_build_deps_to_dict(repository_ctx.attr.additional_build_content),
       "%{remove_runtime_deps}": _expand_deps_to_dict(repository_ctx.attr.remove_runtime_deps),
+      "%{patch_runtime}": _expand_deps_to_dict(repository_ctx.attr.patch_runtime),
     })
 
   repository_ctx.template(
@@ -105,6 +106,7 @@ pip_import = repository_rule(
         "additional_runtime_deps": attr.string_list_dict(),
         "additional_build_content": attr.string_dict(),
         "remove_runtime_deps": attr.string_list_dict(),
+        "patch_runtime": attr.string_list_dict(),
         "python": attr.label(
             executable = True,
             cfg = "host",
